@@ -14,8 +14,11 @@ from pdf_utils import edit_pdf, extract_cover_page_and_abstract
 app_ui = FastAPI()
 app_api = FastAPI()
 
+static_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "static"))
+print("static_path:", static_path)
+
 app_ui.mount("/api/v1", app_api)
-app_ui.mount("/", StaticFiles(directory="static", html=True), name="static")
+app_ui.mount("/", StaticFiles(directory=static_path, html=True), name="static")
 
 
 @app_api.post("/inferMetadata")
@@ -80,3 +83,4 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(app_ui, port=8000, log_level="info")
+
