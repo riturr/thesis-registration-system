@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('static', 'static')],
+    datas=[('static', 'static'), ('Tesseract-OCR', 'Tesseract-OCR'), ('poppler', 'poppler')],
     hiddenimports=[],
     hookspath=['pyinstaller-hooks'],
     hooksconfig={},

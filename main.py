@@ -9,31 +9,31 @@ from starlette.staticfiles import StaticFiles
 from dspace import generate_dublin_core_xml, build_saf_file
 from dto import ThesisMetadata
 from inference import extract_metadata, extract_keywords
-from pdf_utils import edit_pdf, extract_cover_page_and_abstract
+from pdf_utils import edit_pdf, extract_page_text
 
 app_ui = FastAPI()
 app_api = FastAPI()
 
-static_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "static"))
-print("static_path:", static_path)
+static_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "static"))
 
 app_ui.mount("/api/v1", app_api)
 app_ui.mount("/", StaticFiles(directory=static_path, html=True), name="static")
 
 
 @app_api.post("/inferMetadata")
-def infer_metadata(document: UploadFile) -> ThesisMetadata:
-    cover_page, abstract = extract_cover_page_and_abstract(document.file)
+def infer_metadata(document: UploadFile, cover_page: int, abstract_page) -> ThesisMetadata:
+    cover_page_text = extract_page_text(document.file, cover_page)
+    abstract_text = extract_page_text(document.file, abstract_page)
 
-    cover_page_metadata = extract_metadata(cover_page)
-    keywords = extract_keywords(abstract)
+    cover_page_metadata = extract_metadata(cover_page_text)
+    keywords = extract_keywords(abstract_text)
 
     return ThesisMetadata(
         advisors=cover_page_metadata.advisors,
         authors=cover_page_metadata.authors,
         code="",
         issued=cover_page_metadata.issued,
-        abstract=abstract,
+        abstract=abstract_text,
         language="",
         subjects=keywords,
         title=cover_page_metadata.title,
@@ -52,7 +52,9 @@ def get_saf_file(
         language: Annotated[str, Form()],
         subjects: Annotated[list[str], Form()],
         title: Annotated[str, Form()],
-        document_type: Annotated[str, Form()]
+        document_type: Annotated[str, Form()],
+        watermark_start_page: Annotated[int, Form()],
+        watermark_end_page: Annotated[int, Form()],
 ) -> FileResponse:
     metadata = ThesisMetadata(
         advisors=advisors,
@@ -67,7 +69,7 @@ def get_saf_file(
     )
     code = metadata.code
     xml = generate_dublin_core_xml(metadata)
-    pdf = edit_pdf(document.file)
+    pdf = edit_pdf(document.file, watermark_start_page, watermark_end_page)
     saf_file = build_saf_file(xml, pdf, code)
 
     return FileResponse(

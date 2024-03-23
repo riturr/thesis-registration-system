@@ -28,7 +28,7 @@ def generate_dublin_core_xml(metadata: ThesisMetadata) -> str:
 def build_saf_file(xml: str, pdf: BinaryIO, code: str):
     with tempfile.NamedTemporaryFile(delete=False) as temp:
         with zipfile.ZipFile(temp, mode="w") as z:
-            z.writestr("item_000/contents", code)
+            z.writestr("item_000/contents", f"{code}.pdf")
             z.writestr("item_000/dublin_core.xml", xml)
             z.writestr(f"item_000/{code}.pdf", pdf.read())
         temp.seek(0)

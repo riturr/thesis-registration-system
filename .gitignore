@@ -2,3 +2,5 @@
 .idea/
 dist
 build
+Tesseract-OCR
+poppler
