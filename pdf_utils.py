@@ -5,6 +5,7 @@ from pypdf import PdfWriter, PdfReader
 from pdf2image import convert_from_bytes
 import configparser
 import pytesseract
+from PIL import Image
 
 config = configparser.ConfigParser()
 config.read("config.conf", encoding="utf-8")
@@ -61,11 +62,16 @@ def edit_pdf(pdf_document: BinaryIO, watermark_start_page: int, watermark_end_pa
     return pdf_with_copyright_notice
 
 
-def extract_page_text(pdf: BinaryIO, page: int) -> str:
-    pytesseract.pytesseract.tesseract_cmd = os.path.normpath(os.path.join(os.path.dirname(__file__), "Tesseract-OCR/tesseract.exe"))
+def get_page_as_image(pdf: BinaryIO, page: int) -> Image.Image:
     poppler_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "poppler/Library/bin"))
     pdf.seek(0)
     first_page = int(page)
     last_page = int(page) + int(1)
     page_as_image = convert_from_bytes(pdf.read(), first_page=first_page, last_page=last_page, poppler_path=poppler_path)[0]
+    return page_as_image
+
+
+def extract_page_text(pdf: BinaryIO, page: int) -> str:
+    pytesseract.pytesseract.tesseract_cmd = os.path.normpath(os.path.join(os.path.dirname(__file__), "Tesseract-OCR/tesseract.exe"))
+    page_as_image = get_page_as_image(pdf, page)
     return pytesseract.image_to_string(page_as_image, lang="spa")

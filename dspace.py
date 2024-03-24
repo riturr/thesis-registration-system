@@ -1,6 +1,8 @@
+import io
 import tempfile
 import zipfile
 from typing import BinaryIO
+from PIL import Image
 
 from lxml import etree as et
 
@@ -29,12 +31,17 @@ def generate_dublin_core_xml(metadata: ThesisMetadata) -> str:
     return pretty_xml
 
 
-def build_saf_file(xml: str, pdf: BinaryIO, code: str):
+def build_saf_file(xml: str, pdf: BinaryIO, code: str, thumbnail: Image.Image):
+
     with tempfile.NamedTemporaryFile(delete=False) as temp:
         with zipfile.ZipFile(temp, mode="w") as z:
-            z.writestr("item_000/contents", f"{code}.pdf")
+            z.writestr("item_000/contents", f"{code}.pdf\nthumbnail.jpg\tbundle:THUMBNAIL")
             z.writestr("item_000/dublin_core.xml", xml)
             z.writestr(f"item_000/{code}.pdf", pdf.read())
+
+            thumbnail_bytes = io.BytesIO()
+            thumbnail.save(thumbnail_bytes, format="JPEG")
+            z.writestr("item_000/thumbnail.jpg", thumbnail_bytes.getvalue())
         temp.seek(0)
 
         return temp.name

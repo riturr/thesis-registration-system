@@ -9,7 +9,7 @@ from starlette.staticfiles import StaticFiles
 from dspace import generate_dublin_core_xml, build_saf_file
 from dto import ThesisMetadata
 from inference import extract_metadata, extract_keywords
-from pdf_utils import edit_pdf, extract_page_text
+from pdf_utils import edit_pdf, extract_page_text, get_page_as_image
 
 app_ui = FastAPI()
 app_api = FastAPI()
@@ -79,8 +79,9 @@ def get_saf_file(
     )
     code = metadata.code
     xml = generate_dublin_core_xml(metadata)
-    pdf = edit_pdf(document.file, watermark_start_page, watermark_end_page)
-    saf_file = build_saf_file(xml, pdf, code)
+    thumbnail = get_page_as_image(document.file, 1)
+    edited_pdf = edit_pdf(document.file, watermark_start_page, watermark_end_page)
+    saf_file = build_saf_file(xml, edited_pdf, code, thumbnail)
 
     return FileResponse(
         path=saf_file,
