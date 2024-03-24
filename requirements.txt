@@ -1,3 +1,4 @@
+es-metaextract-umsa-v2 @ https://huggingface.co/riturralde/es_metaextract_umsa_v2/resolve/main/es_metaextract_umsa_v2-any-py3-none-any.whl#sha256=679ddb544c17ce7b5a39204dc31403e5c0ed054edc06effba7d64b0e81ef9632
 fastapi~=0.110.0
 pdf2image~=1.17.0
 pydantic~=2.6.4
@@ -6,4 +7,5 @@ pypdf~=4.1.0
 pytesseract~=0.3.10
 uvicorn~=0.29.0
 starlette~=0.36.3
+spacy~=3.7.4
 lxml~=5.1.0

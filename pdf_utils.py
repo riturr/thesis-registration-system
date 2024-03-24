@@ -7,7 +7,7 @@ import configparser
 import pytesseract
 
 config = configparser.ConfigParser()
-config.read("config.conf")
+config.read("config.conf", encoding="utf-8")
 
 encryption_password = config["PDF"]["encryption_password"]
 watermark_pdf_path = config["PDF"]["watermark_pdf_path"]
@@ -68,4 +68,4 @@ def extract_page_text(pdf: BinaryIO, page: int) -> str:
     first_page = int(page)
     last_page = int(page) + int(1)
     page_as_image = convert_from_bytes(pdf.read(), first_page=first_page, last_page=last_page, poppler_path=poppler_path)[0]
-    return pytesseract.image_to_string(page_as_image)
+    return pytesseract.image_to_string(page_as_image, lang="spa")

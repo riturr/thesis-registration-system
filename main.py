@@ -24,6 +24,10 @@ app_ui.mount("/", StaticFiles(directory=static_path, html=True), name="static")
 def infer_metadata(document: UploadFile, cover_page: int, abstract_page) -> ThesisMetadata:
     cover_page_text = extract_page_text(document.file, cover_page)
     abstract_text = extract_page_text(document.file, abstract_page)
+    # abstract to single line
+    abstract_text = " ".join(abstract_text.splitlines())
+    # abstract with single spaces
+    abstract_text = " ".join(abstract_text.split())
 
     cover_page_metadata = extract_metadata(cover_page_text)
     keywords = extract_keywords(abstract_text)
@@ -37,7 +41,9 @@ def infer_metadata(document: UploadFile, cover_page: int, abstract_page) -> Thes
         language="",
         subjects=keywords,
         title=cover_page_metadata.title,
-        document_type=""
+        document_type="",
+        thesis_degree_grantor=cover_page_metadata.thesis_degree_grantor,
+        thesis_degree_name=""
     )
 
 
@@ -53,6 +59,8 @@ def get_saf_file(
         subjects: Annotated[list[str], Form()],
         title: Annotated[str, Form()],
         document_type: Annotated[str, Form()],
+        thesis_degree_grantor: Annotated[str, Form()],
+        thesis_degree_name: Annotated[str, Form()],
         watermark_start_page: Annotated[int, Form()],
         watermark_end_page: Annotated[int, Form()],
 ) -> FileResponse:
@@ -65,7 +73,9 @@ def get_saf_file(
         language=language,
         subjects=subjects,
         title=title,
-        document_type=document_type
+        document_type=document_type,
+        thesis_degree_grantor=thesis_degree_grantor,
+        thesis_degree_name=thesis_degree_name
     )
     code = metadata.code
     xml = generate_dublin_core_xml(metadata)
@@ -85,4 +95,3 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(app_ui, port=8000, log_level="info")
-

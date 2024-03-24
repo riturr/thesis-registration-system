@@ -12,10 +12,8 @@ class ThesisMetadata(BaseModel):
     subjects: list[str]
     title: str
     document_type: str
-
-
-class ThesisMetadataWithDocument(ThesisMetadata):
-    document: UploadFile
+    thesis_degree_grantor: str
+    thesis_degree_name: str
 
 
 class CoverPageMetadata(BaseModel):
@@ -23,3 +21,4 @@ class CoverPageMetadata(BaseModel):
     authors: list[str]
     advisors: list[str]
     issued: str
+    thesis_degree_grantor: str
