@@ -6,21 +6,23 @@ from starlette.background import BackgroundTask
 from starlette.responses import FileResponse
 from starlette.staticfiles import StaticFiles
 
-from dspace import generate_dublin_core_xml, build_saf_file
+from dspace import generate_dublin_core_xml, build_saf_file, parse_marc21
 from dto import ThesisMetadata
 from inference import extract_metadata, extract_keywords
 from pdf_utils import edit_pdf, extract_page_text, get_page_as_image
 
 app_ui = FastAPI()
-app_api = FastAPI()
+app_api_v1 = FastAPI()
+app_api_v2 = FastAPI()
 
 static_path = os.path.normpath(os.path.join(os.path.dirname(__file__), "static"))
 
-app_ui.mount("/api/v1", app_api)
+app_ui.mount("/api/v1", app_api_v1)
+app_ui.mount("/api/v2", app_api_v2)
 app_ui.mount("/", StaticFiles(directory=static_path, html=True), name="static")
 
 
-@app_api.post("/inferMetadata")
+@app_api_v1.post("/inferMetadata")
 def infer_metadata(document: UploadFile, cover_page: int, abstract_page) -> ThesisMetadata:
     cover_page_text = extract_page_text(document.file, cover_page)
     abstract_text = extract_page_text(document.file, abstract_page)
@@ -47,7 +49,7 @@ def infer_metadata(document: UploadFile, cover_page: int, abstract_page) -> Thes
     )
 
 
-@app_api.post("/getSafFile")
+@app_api_v1.post("/getSafFile")
 def get_saf_file(
         document: UploadFile,
         advisors: Annotated[list[str], Form()],
@@ -86,6 +88,30 @@ def get_saf_file(
     return FileResponse(
         path=saf_file,
         filename=f"{code}.zip",
+        media_type="application/zip",
+        background=BackgroundTask(os.remove, saf_file)
+    )
+
+
+@app_api_v2.post("/getSafFile")
+def get_saf_file_v2(
+        document: UploadFile,
+        marc21: UploadFile,
+        watermark_start_page: Annotated[int, Form()],
+        watermark_end_page: Annotated[int, Form()],
+) -> FileResponse:
+    metadata = parse_marc21(marc21.file)
+
+    document_code = metadata.code
+    dublin_core_xml = generate_dublin_core_xml(metadata)
+    thumbnail = get_page_as_image(document.file, 1)
+    edited_pdf = edit_pdf(document.file, watermark_start_page, watermark_end_page)
+
+    saf_file = build_saf_file(dublin_core_xml, edited_pdf, document_code, thumbnail)
+
+    return FileResponse(
+        path=saf_file,
+        filename=f"{document_code}.zip",
         media_type="application/zip",
         background=BackgroundTask(os.remove, saf_file)
     )
